@@ -1,6 +1,13 @@
+#include <string.h>
+#include "tigress.h"
 #include <stdio.h>
+#include <time.h>
+#include <pthread.h>
+#include <stdio.h> // for io operations
+#include <stdlib.h>
 
-int main() {
+int main()
+{
     int num1, num2, sum;
 
     // Ask the user to enter the first number
