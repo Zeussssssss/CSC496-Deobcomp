@@ -96,7 +96,7 @@ def attempt_decompilation(binary_loc, obfuscation, confidence):
             model="claude-3-opus-20240229",
             max_tokens=2000,
             temperature=0.6,
-            system=f"""Your task is to do your best attempt at decompiling the provided assembly code of a C executable obfuscated using {LLM_Translator[obfuscation]} ({confidence}% confidence). The code should be correct and ready to compile. You will do this by performing the following actions: \n\n1 - Decompile the provided assembly code to C language.  \n2 - Optimize and simplify the code created in step 1 to the best of your ability. Use the provided obfuscation type as a hint. \n3 - Generating a few line summary of what you think the optimized code does. (Should NOT exceed 5 lines) \n4 - Output a JSON object that contains the following fields: \ntransl, optim, summ. JUST OUTPUT THIS JSON, NOTHING ELSE! DO NOT ADD EXTRA TEXT. \n\nUse the following format: \ntransl: <Decompiled C code generated in step 1>\noptim: <simpler version generated in step 2>\nsumm: <summary generated in step 3>""",
+            system=f"""Your task is to do your best attempt at decompiling the provided assembly code of a C executable obfuscated using {LLM_Translator[obfuscation]} ({confidence}% confidence). The code should be correct and ready to compile. You will do this by performing the following actions: \n\n1 - Decompile the provided assembly code to C language.  \n2 - Optimize and simplify the code created in step 1 to the best of your ability. Use the provided obfuscation type as a hint. \n3 - Generating a few line summary of what you think the optimized code does. (Should NOT exceed 5 lines) \n4 - Output a JSON object that contains the following fields: \ntransl, optim, summ. JUST OUTPUT THIS JSON, NOTHING ELSE! DO NOT ADD EXTRA TEXT OR DIALOGUE. \n\nUse the following format: \ntransl: <Decompiled C code generated in step 1>\noptim: <simpler version generated in step 2>\nsumm: <summary generated in step 3>""",
             messages=[
                 {
                     "role": "user",
@@ -112,8 +112,11 @@ def attempt_decompilation(binary_loc, obfuscation, confidence):
 
 
 def parse_response(response):
+    if response[0] == "{":
+        return json.loads(response)
     start_index = response.find("```json")
     end_index = response.find("```", start_index + 7)
+    print(response)
     return json.loads(response[start_index:end_index])
 
 
@@ -134,14 +137,16 @@ def main():
         args.input, pred_class, round(confidence[0] * 100, 2)
     )
     print("----------- DECOMPILATION OUTPUT -----------")
-    print(" DIRECT DECOMPILATION ")
+    print("==> DIRECT DECOMPILATION ")
     print(decoded_json["transl"] + "\n")
-    print(" OPTIMIZED DECOMPILATION ")
+    print("==> OPTIMIZED DECOMPILATION ")
     print(decoded_json["optim"] + "\n")
-    print(" SUMMARY ")
+    print("==> SUMMARY ")
     print(decoded_json["summ"] + "\n")
-    if args.output == "stdout":
-        print(f"===> Saving the optimized version of the decompiled file ")
+    if args.output != "stdout":
+        print(
+            f"===> Saving the optimized version of the decompiled file in {args.output}"
+        )
         with open(args.output, "w") as file:
             # Write the contents of the variable to the file
             file.write(decoded_json["optim"])

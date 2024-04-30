@@ -1,9 +1,7 @@
 #include <string.h>
-#include "tigress.h"
 #include <stdio.h>
 #include <time.h>
 #include <pthread.h>
-#include <stdio.h> // for io operations
 #include <stdlib.h>
 
 int main()
